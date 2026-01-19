@@ -1,0 +1,61 @@
+// 这是一个生成器，告诉 Prisma 我们要生成 JS 客户端
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 这里配置数据库类型。如果你后面要上线换 MySQL，就把 provider 改成 "mysql"
+datasource db {
+  provider = "mysql"
+  url      = env("localhost:3306/blog_system")
+}
+
+// 1. 用户表 (User)
+// 包含简单的登录信息。如果后续接 NextAuth，这个表结构会完美兼容。
+model User {
+  id        String    @id @default(cuid()) // 使用 CUID 作为主键，比数字 ID 更安全
+  email     String    @unique
+  password  String?   // 密码哈希 (如果是 GitHub 登录则为空)
+  name      String?
+  image     String?   // 头像
+  role      String    @default("user") // "admin" 或 "user"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // 关系：一个人可以写多篇文章，也可以发多条评论
+  posts     Post[]
+  comments  Comment[]
+}
+
+// 2. 博客文章表 (Post)
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique // 文章的个性化链接，比如 /blog/my-first-post
+  content     String    // 文章内容 (Markdown)
+  published   Boolean   @default(false)
+  viewCount   Int       @default(0)
+  
+  // AI 相关字段
+  summary     String?   // AI 自动生成的摘要
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关系
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  comments    Comment[]
+}
+
+// 3. 评论表 (Comment)
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  
+  // 关系：评论属于哪篇文章，是谁写的
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+}
