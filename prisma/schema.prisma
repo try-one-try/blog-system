@@ -6,7 +6,7 @@ generator client {
 // 这里配置数据库类型。如果你后面要上线换 MySQL，就把 provider 改成 "mysql"
 datasource db {
   provider = "mysql"
-  url      = env("localhost:3306/blog_system")
+  url      = env("DATABASE_URL")
 }
 
 // 1. 用户表 (User)
